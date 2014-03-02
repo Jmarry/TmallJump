@@ -1,0 +1,43 @@
+*{margin: 0;padding: 0}
+#gamebox{position: relative;width: auto;margin: 0 auto;}
+@media (max-width:478px) {
+    #gamebox{width: 100%;}
+}
+#canvasSkyLayer,#canvasCatLayer,#canvasCloudLayer,#store{position: absolute;top: 0;left: 0;}
+.control{position: fixed;top: 0;bottom: 0;width: 100%;background: url(/img/mobile/control.jpg) repeat;}
+.control .btn{width: 49%;height: 100%;display: inline-block;position: relative;}
+.qrcode{position: absolute;width: 100px;height: 100px;top: 0;right: 0;}
+.icon{position: absolute;top: 50%;left: 50%;background: url(/img/mobile/keybtn.png) no-repeat 0 0;width: 50px;height: 50px;margin: -25px 0 0 -25px;}
+.icon-rightbtn{background: url(/img/mobile/keybtn.png) no-repeat -105px 0;}
+.icon-hover{
+    -webkit-transform:scale(1.5);
+}
+.gameover,.gamestart{
+    position: fixed;top: 0;bottom: 0;width: 100%;background: url(/img/mobile/gameover.jpg) repeat;
+}
+.gameover img,.gamestart img{margin: 0 auto;width: 320px;display: block;}
+.gamestart{background: url(/img/mobile/gamestart.jpg) repeat;}
+.gameover{background: url(/img/mobile/gameover.jpg) repeat;}
+#J_start,#J_over{position: absolute;width: 140px;height: 39px;left: 50%;bottom: 15%;margin-left: -75px;background: url(/img/mobile/startbtn.jpg) no-repeat 0 0;-webkit-animation:runKey 1s linear infinite;}
+#J_over{background: url(/img/mobile/overbtn.jpg) no-repeat 0 0;}
+@-webkit-keyframes runKey{
+    0%{
+        -webkit-transform:scale(1);
+    }
+    20%{
+        -webkit-transform:scale(.8);
+    }
+    60%{
+        -webkit-transform:scale(1);
+    }
+    80%{
+        -webkit-transform:scale(1.1);
+    }
+    100%{
+        -webkit-transform:scale(1);
+    }
+}
+@media (min-width:480px) {
+    .catbox{display: inline-block;width: 50%;}
+    #J_start,#J_over{left: 75%;bottom: 50%;}
+}

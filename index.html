@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <title>天猫跳</title>
+    <link rel="stylesheet" href="css/style.css"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="black" name="apple-mobile-web-app-status-bar-style">
+</head>
+<body>
+<div id="gamebox">
+    <canvas width="480" height="800" id="canvasSkyLayer"></canvas>
+    <canvas width="480" height="800" id="canvasCloudLayer"></canvas>
+    <canvas width="480" height="800" id="canvasCatLayer"></canvas>
+    <div id="store">0</div>
+</div>
+<div id="QR" class="qrcode"></div>
+<script type="text/javascript" src="http://g.tbcdn.cn/kissy/k/1.3.0/seed-min.js"></script>
+<script src="http://g.assets.daily.taobao.net/mui/qrcode/1.0.1/index.js?t=1"></script>
+<script src="http://g.assets.daily.taobao.net/mui/qrcode/1.0.1/encode.js?t=1"></script>
+<script type="text/javascript" src="/js/utils.js"></script>
+<script type="text/javascript" src="/js/games/game.js"></script>
+<script type="text/javascript" src="/js/cat/cat.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+    KISSY.use('node',function(S,nodelist){
+        var images=[{
+            name:'sky',
+            src:'/img/bg/sky1.jpg'
+        },{
+            name:'cat',
+            src:'/img/cat/jump1.png'
+        },{
+            name:'daiji',
+            src:'/img/cat/jump1.png'
+        },{
+            name:'cloud',
+            src:'/img/cloud/cloud1.png'
+        },{
+            name:'cloud_stable_01',
+            src:'/img/cloud/cloud1.png'
+        },{
+            name:'cloud_stable_02',
+            src:'/img/cloud/cloud1.png'
+        },{
+            name:'cloud_stable_03',
+            src:'/img/cloud/cloud1.png'
+        },{
+            name:'cloud_stable_04',
+            src:'/img/cloud/cloud1.png'
+        },{
+            name:'cloud_stable_05',
+            src:'/img/cloud/cloud1.png'
+        },{
+            name:'cloud_small',
+            src:'/img/cloud/cloud_small.png'
+        },{
+            name:'cloud_moveable',
+            src:'/img/cloud/cloud_moveable.png'
+        },{
+            name : 'Jump',
+            src : '/img/cat/jump1.png'
+        },{
+            name : 'swim',
+            src : '/img/cat/swim.png'
+        },{
+            name : 'qiqiu',
+            src : '/img/cat/qiqiu.png'
+        },{
+            name : 'superman',
+            src : '/img/cat/superman.png'
+        },{
+            name : 'props_swim',
+            src : '/img/prop/props_swim.png'
+        },{
+            name : 'props_superman',
+            src : '/img/prop/props_superman.png'
+        },{
+            name:'props_balloon',
+            src:'/img/prop/props_balloon.png'
+        },{
+            name:'prop_spring01',
+            src:'/img/prop/prop_spring01.png'
+        },{
+            name:'prop_spring03',
+            src:'/img/prop/prop_spring03.png'
+        }
+            //'cloud', 'cloud_small', 'cloud_moveable', 'cloud_stable_01', 'cloud_stable_02', 'cloud_stable_03', 'cloud_stable_04', 'cloud_stable_05'
+
+        ];
+        TTT.ImgStack.load(images,function(i){
+            var imglist={};
+            if(i==images.length){
+                for(var img in images){
+                    imglist[images[img].name]=images[img].Dom;
+                }
+                init(imglist);
+            }
+        });
+        function init(imgs){
+            var catJump=new CatJump({
+                Images:imgs
+            });
+            //设置移动端控制
+//            catJump.phoneControl=true;
+            catJump.setFPS(60);
+            catJump.init();
+            catJump.onstart=function(){
+                var self=this,socket;
+                if(catJump.phoneControl){
+                    socket=io.connect('http://10.13.101.5:8000/game');
+                    self.socket=socket.on('user', function (data) {
+                        S.use('mui/qrcode',function(S,QRcode){
+                            var qr = new QRcode(100,100),
+                                    val='http://10.13.101.5:8000/mb/#'+data.id,
+                                    dom=qr.render(val);
+                            S.one('#QR').html('').append(dom);
+                        });
+                    }).on('keys',function(data){
+                                if(data.left!=null){
+                                    self.keyDownLeft=data.left;
+                                }else if(data.right!=null){
+                                    self.keyDownRight=data.right;
+                                }
+                            }).on('start',function(data){
+                                if(data.success && self.cat.animName==='daiji'){
+                                    self.cat.stateUpdate=self.cat.Jump;
+                                }
+                            }).on('restart',function(data){
+                                if(data.success && self.cat.animName==='dead'){
+                                    self.stateInit();
+                                    self.start();
+                                }
+                            });
+                }else{
+                    S.one(document).on('keydown',function(e){
+                        if(e.keyCode===37){
+                            self.keyDownLeft=true;
+                        }else if(e.keyCode===39){
+                            self.keyDownRight=true;
+                        }
+                        if(e.keyCode===38&&self.cat.animName==='daiji'){
+                            self.cat.stateUpdate=self.cat.Jump;
+                            self.startTime=new Date().getTime();
+                        }
+                    }).on('keyup',function(e){
+                                if(e.keyCode===37){
+                                    self.keyDownLeft=false;
+                                }else if(e.keyCode===39){
+                                    self.keyDownRight=false;
+                                }
+                            });
+                }
+            };
+            catJump.onupdate=function(){
+                var tmptime,endTime;
+                if(this.startTime){
+                    tmptime=(new Date().getTime()-this.startTime)/1000;
+                    endTime=Math.floor(this.defaultTime-tmptime%60);
+                    if(endTime>=0){
+                        S.one('#store').html(endTime);
+                    }else{
+                        this.cat.dead();
+                    }
+                }
+            };
+            catJump.onstop=function(){
+                this.socket&&this.socket.emit('over',{game:false});
+            };
+            catJump.stateInit();
+            catJump.start();
+        }
+    })
+</script>
+</body>
+</html>

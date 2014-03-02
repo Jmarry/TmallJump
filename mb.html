@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <title>移动端控制器</title>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="black" name="apple-mobile-web-app-status-bar-style">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <script type="text/javascript" src="http://g.tbcdn.cn/kissy/k/1.3.0/seed-min.js"></script>
+</head>
+<body>
+<div id="main-mobile">
+    <div class="control" style="display: none;">
+        <div class="left btn">
+            <i class="icon left icon-leftbtn"></i>
+        </div>
+        <div class="right btn">
+            <i class="icon right icon-rightbtn"></i>
+        </div>
+    </div>
+    <div class="gameover" style="display: none">
+        <div class="catbox">
+            <img src="/img/mobile/catover.jpg" alt=""/>
+        </div>
+        <div id="J_over"></div>
+    </div>
+    <div class="gamestart" style="display: none;">
+        <div class="inner">
+            <div class="catbox">
+                <img src="/img/mobile/catstart.jpg" alt=""/>
+            </div>
+            <div id="J_start"></div>
+        </div>
+    </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+    (function(S){
+        var socket =io.connect('http://10.13.101.5:8000/mb'),query=location.hash.slice(1,location.hash.length);
+        if(query){
+            S.use('node',function(S,node){
+                socket.emit('setGameBody',query);
+                socket.on('isReandy',function(data){
+                    if(data.success){
+                        switch (data.status){
+                            case 1:
+                                S.one('.gamestart').show();
+                                S.one('.control').hide();
+                                S.one('.gameover').hide();
+                                break;
+                            case 2:
+                                S.one('.gamestart').hide();
+                                S.one('.control').show();
+                                S.one('.gameover').hide();
+                                break;
+                            case 3:
+                                S.one('.gamestart').hide();
+                                S.one('.control').hide();
+                                S.one('.gameover').show();
+                                break;
+                        }
+                    }else{
+                        S.one('body').html('启动失败');
+                    }
+                }).on('status',function(data){
+                    S.one('.control').hide();
+                    S.one('.gameover').show();
+                });
+                S.one('#J_start').on(S.Event.Gesture.start,function(){
+                    socket.emit('start',{success:true});
+                    S.one('.gamestart').hide();
+                    S.one('.control').show();
+                    S.one('.gameover').hide();
+                });
+                S.one('#J_over').on(S.Event.Gesture.start,function(){
+                    socket.emit('restart',{success:true});
+                    S.one('.gamestart').show();
+                    S.one('.control').hide();
+                    S.one('.gameover').hide();
+                });
+                S.one('.control').on(S.Event.Gesture.start,function(e){
+                    if(S.one(e.target).hasClass('left')){
+                        socket.emit('keycontrol',{left:true});
+                    }else if(S.one(e.target).hasClass('right')){
+                        socket.emit('keycontrol',{right:true});
+                    }
+                    S.one(e.target).addClass('icon-hover');
+                    S.one(e.target).all('.icon').addClass('icon-hover');
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+                S.one(document).on(S.Event.Gesture.end,function(e){
+                    if(S.one(e.target).hasClass('left')){
+                        socket.emit('keycontrol',{left:false});
+                    }else if(S.one(e.target).hasClass('right')){
+                        socket.emit('keycontrol',{right:false});
+                    }
+                    S.one(e.target).removeClass('icon-hover');
+                    S.one(e.target).all('.icon').removeClass('icon-hover');
+                    e.stopPropagation();
+                    e.preventDefault();
+                })
+            });
+        }else{
+            document.body.innerHTML='没有key';
+        }
+    })(KISSY);
+</script>
+</body>
+</html>
